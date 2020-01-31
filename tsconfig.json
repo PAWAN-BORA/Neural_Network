@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "AMD",
+        "outFile": "js/NN.js",
+        "target": "ES6",
+        "removeComments": true,
+        "sourceMap": true,
+    },
+    "include": [
+        "**/*",
+        "*"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}
