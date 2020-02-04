@@ -18,7 +18,7 @@ class Matrix {
     public randomise():void {
         for(let i=0; i<this.rows; i++) {
             for(let j=0; j<this.cols; j++) {
-                this.data[i][j] = randomInt(0, 10);
+                this.data[i][j] = Math.random()*2-1;
             }
         }
     }
@@ -50,6 +50,22 @@ class Matrix {
             throw new Error(error);
         }
     }
+    public static fromArray(array:number[]):Matrix {
+        let m = new Matrix(array.length, 1);
+        for(let i=0; i<m.rows; i++) {
+            m.data[i][0] = array[i];
+        }
+        return m;
+    }
+    public toArray():number[] {
+        let array = [];
+        for(let i=0; i<this.rows; i++) {
+            for(let j=0; j<this.cols; j++) {
+                array.push(this.data[i][j])
+            }
+        }
+        return array;
+    }
     public multiply(a:number):void {
         try {
             if(typeof a === "number") {
@@ -63,6 +79,20 @@ class Matrix {
             }
         } catch (error) {  
             throw new Error(error);
+        }
+    }
+    public add(mat:Matrix):void {
+        try {
+            if(this.rows!==mat.rows && this.cols!==mat.cols) {
+                throw 'For matrix addition rows and columns of both matries should be equal'
+            }
+            for(let i=0; i<this.rows; i++) {
+                for(let j=0; j<this.cols; j++) {
+                    this.data[i][j] += mat.data[i][j];
+                }
+            }
+        } catch (error) {
+            
         }
     }
     public inverse():Matrix {
@@ -133,5 +163,16 @@ class Matrix {
             }
         }
         return mat;
+    }
+    public map(fn:Function){
+        for(let i=0; i<this.rows; i++) {
+            for(let j=0; j<this.cols; j++){
+                let val = this.data[i][j];
+                this.data[j][j] = fn(val);
+            }
+        }
+    }
+    public print() {
+        console.table(this.data);
     }
 }
