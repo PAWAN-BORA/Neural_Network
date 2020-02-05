@@ -16,7 +16,7 @@ class Matrix {
     randomise() {
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.cols; j++) {
-                this.data[i][j] = randomInt(0, 10);
+                this.data[i][j] = Math.random() * 2 - 1;
             }
         }
     }
@@ -48,6 +48,22 @@ class Matrix {
             throw new Error(error);
         }
     }
+    static fromArray(array) {
+        let m = new Matrix(array.length, 1);
+        for (let i = 0; i < m.rows; i++) {
+            m.data[i][0] = array[i];
+        }
+        return m;
+    }
+    toArray() {
+        let array = [];
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                array.push(this.data[i][j]);
+            }
+        }
+        return array;
+    }
     multiply(a) {
         try {
             if (typeof a === "number") {
@@ -63,6 +79,20 @@ class Matrix {
         }
         catch (error) {
             throw new Error(error);
+        }
+    }
+    add(mat) {
+        try {
+            if (this.rows !== mat.rows && this.cols !== mat.cols) {
+                throw 'For matrix addition rows and columns of both matries should be equal';
+            }
+            for (let i = 0; i < this.rows; i++) {
+                for (let j = 0; j < this.cols; j++) {
+                    this.data[i][j] += mat.data[i][j];
+                }
+            }
+        }
+        catch (error) {
         }
     }
     inverse() {
@@ -131,18 +161,48 @@ class Matrix {
         }
         return mat;
     }
+    map(fn) {
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                let val = this.data[i][j];
+                this.data[j][j] = fn(val);
+            }
+        }
+    }
+    print() {
+        console.table(this.data);
+    }
 }
-let start = performance.now();
-let a = new Matrix(2, 2);
-a.randomise();
-let b = Matrix.Identity(2);
-let c = Matrix.multiply(a, b);
-let d = new Matrix(12, 12);
-d.randomise();
-console.table(d.data);
-let k = d.determinant();
-console.table(k);
-console.log(performance.now() - start);
+class NeuralNetwork {
+    constructor(input, hidden, output) {
+        this.input_nodes = input;
+        this.hidden_nodes = hidden;
+        this.output_nodes = output;
+        this.weight_ih = new Matrix(hidden, input);
+        this.weight_ho = new Matrix(output, hidden);
+        this.weight_ih.randomise();
+        this.weight_ho.randomise();
+        this.bias_h = new Matrix(hidden, 1);
+        this.bias_o = new Matrix(output, 1);
+        this.bias_h.randomise();
+        this.bias_o.randomise();
+    }
+    feedForword(input_array) {
+        let input = Matrix.fromArray(input_array);
+        let hidden = Matrix.multiply(this.weight_ih, input);
+        hidden.add(this.bias_h);
+        hidden.map(sigmoid);
+        let output = Matrix.multiply(this.weight_ho, hidden);
+        output.add(this.bias_o);
+        output.map(sigmoid);
+        return output.toArray();
+    }
+}
+let nn = new NeuralNetwork(2, 2, 1);
+let input = [1, 0];
+let output = nn.feedForword(input);
+console.log(output);
+let a;
 function randomInt(a, b) {
     if (a > b) {
         throw Error(`${a} should be less than ${b}`);
@@ -200,5 +260,8 @@ function TwoDArray(row, column) {
         array[j] = new Array(column);
     }
     return array;
+}
+function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
 }
 //# sourceMappingURL=NN.js.map
