@@ -29,7 +29,38 @@ class Matrix {
         }
         return mat;
     }
-
+    public static add(mat1:Matrix, mat2:Matrix):Matrix {
+        try {
+            if(mat1.rows!==mat2.rows && mat1.cols!==mat2.cols) {
+                throw 'For matrix addition rows and columns of both matries should be equal'
+            }
+            let mat = new Matrix(mat1.rows, mat1.cols);
+            for(let i=0; i<mat.rows; i++) {
+                for(let j=0; j<mat.cols; j++) {
+                    mat.data[i][j] = mat1.data[i][j] + mat2.data[i][j];
+                }
+            }
+            return mat;
+        } catch (error) {
+            
+        }
+    }
+    public static subtract(mat1:Matrix, mat2:Matrix):Matrix {
+        try {
+            if(mat1.rows!==mat2.rows && mat1.cols!==mat2.cols) {
+                throw 'For matrix subtraction rows and columns of both matries should be equal'
+            }
+            let mat = new Matrix(mat1.rows, mat1.cols);
+            for(let i=0; i<mat.rows; i++) {
+                for(let j=0; j<mat.cols; j++) {
+                    mat.data[i][j] = mat1.data[i][j] - mat2.data[i][j];
+                }
+            }
+            return mat;
+        } catch (error) {
+            
+        }
+    }
     public static multiply(a:Matrix, b:Matrix):Matrix{
         try {
             if(a.cols!==b.rows) {
@@ -50,12 +81,35 @@ class Matrix {
             throw new Error(error);
         }
     }
+    public static transpose(matrix:Matrix):Matrix {
+        try {
+            let mat = new Matrix(matrix.cols, matrix.rows);
+            for(let i=0; i<matrix.rows; i++) {
+                for(let j=0; j<matrix.cols; j++) {
+                    mat.data[j][i] = matrix.data[i][j];
+                }
+            } 
+            return mat;
+        } catch(error) {
+            throw new Error(error);
+        }
+    }
     public static fromArray(array:number[]):Matrix {
         let m = new Matrix(array.length, 1);
         for(let i=0; i<m.rows; i++) {
             m.data[i][0] = array[i];
         }
         return m;
+    }
+    public static map(matrix:Matrix, fn:Function):Matrix{
+        let result = new Matrix(matrix.rows, matrix.cols);
+        for(let i=0; i<matrix.rows; i++) {
+            for(let j=0; j<matrix.cols; j++){
+                let val = matrix.data[i][j];
+                result.data[j][j] = fn(val);
+            }
+        }
+        return result;
     }
     public toArray():number[] {
         let array = [];
@@ -66,7 +120,7 @@ class Matrix {
         }
         return array;
     }
-    public multiply(a:number):void {
+    public multiply(a:number|Matrix):void {
         try {
             if(typeof a === "number") {
                 for(let i=0; i<this.rows; i++) {
@@ -74,8 +128,17 @@ class Matrix {
                         this.data[i][j] *= a;
                     }
                 }
+            } else if(a instanceof Matrix){
+                if(a.rows!==this.rows && a.cols!==this.cols) {
+                    throw `for Element wise multiply dimansion of both matrices should be equal`;
+                }
+                for(let i=0; i<this.rows; i++) {
+                    for(let j=0; j<this.cols; j++) {
+                        this.data[i][j] *= a.data[i][j];
+                    }
+                }
             } else {
-                throw `"${a}" must be a number`;
+                throw `"${a}" must be a number or Matrix`;
             }
         } catch (error) {  
             throw new Error(error);
@@ -89,6 +152,20 @@ class Matrix {
             for(let i=0; i<this.rows; i++) {
                 for(let j=0; j<this.cols; j++) {
                     this.data[i][j] += mat.data[i][j];
+                }
+            }
+        } catch (error) {
+            
+        }
+    }
+    public subtract(mat:Matrix):void {
+        try {
+            if(this.rows!==mat.rows && this.cols!==mat.cols) {
+                throw 'For matrix subtraction rows and columns of both matries should be equal'
+            }
+            for(let i=0; i<this.rows; i++) {
+                for(let j=0; j<this.cols; j++) {
+                    this.data[i][j] -= mat.data[i][j];
                 }
             }
         } catch (error) {
@@ -109,19 +186,7 @@ class Matrix {
         }
 
     }
-    public transpos():Matrix {
-        try {
-            let mat = new Matrix(this.cols, this.rows);
-            for(let i=0; i<this.rows; i++) {
-                for(let j=0; j<this.cols; j++) {
-                    mat.data[j][i] = this.data[i][j];
-                }
-            } 
-            return mat;
-        } catch(error) {
-            throw new Error(error);
-        }
-    }
+    
     public determinant():number {
         
         try {
@@ -175,6 +240,7 @@ class Matrix {
             }
         }
     }
+    
     public print() {
         console.table(this.data);
     }

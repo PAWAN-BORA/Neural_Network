@@ -1,7 +1,38 @@
+let training_data = [
+    {
+        inputs:[0, 1],
+        targets:[1],
+    },
+    {
+        inputs:[1, 0],
+        targets:[1],
+    },
+    {
+        inputs:[1, 1],
+        targets:[0],
+    },
+    {
+        inputs:[0, 0],
+        targets:[0],
+    },
+]
+
 let nn = new NeuralNetwork(2, 2, 1);
-let input = [1, 0];
-let output = nn.feedForword(input);
-console.log(output);
+let inputs = [1, 0];
+let targets = [1, 0];
+for(let i=0; i<1000000; i++) {
+    let data = training_data[randomInt(0, 3)];       
+    nn.train(data.inputs, data.targets);
+}
+console.log(nn.feedForword([0, 1]));
+console.log(nn.feedForword([1, 0]));
+console.log(nn.feedForword([0, 0]));
+console.log(nn.feedForword([1, 1]));
+console.log(nn.weight_ih.print());
+console.log(nn.weight_ho.print());
+// nn.train(inputs, targets);
+// let output = nn.feedForword(inputs);
+// console.log(output);
 
 
 // let start = performance.now();
@@ -30,4 +61,3 @@ console.log(output);
 // // let l = d.transpos();
 // // console.table(l.data);
 // console.log(performance.now()-start);
-let a;

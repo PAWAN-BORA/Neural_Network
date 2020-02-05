@@ -27,6 +27,38 @@ class Matrix {
         }
         return mat;
     }
+    static add(mat1, mat2) {
+        try {
+            if (mat1.rows !== mat2.rows && mat1.cols !== mat2.cols) {
+                throw 'For matrix addition rows and columns of both matries should be equal';
+            }
+            let mat = new Matrix(mat1.rows, mat1.cols);
+            for (let i = 0; i < mat.rows; i++) {
+                for (let j = 0; j < mat.cols; j++) {
+                    mat.data[i][j] = mat1.data[i][j] + mat2.data[i][j];
+                }
+            }
+            return mat;
+        }
+        catch (error) {
+        }
+    }
+    static subtract(mat1, mat2) {
+        try {
+            if (mat1.rows !== mat2.rows && mat1.cols !== mat2.cols) {
+                throw 'For matrix subtraction rows and columns of both matries should be equal';
+            }
+            let mat = new Matrix(mat1.rows, mat1.cols);
+            for (let i = 0; i < mat.rows; i++) {
+                for (let j = 0; j < mat.cols; j++) {
+                    mat.data[i][j] = mat1.data[i][j] - mat2.data[i][j];
+                }
+            }
+            return mat;
+        }
+        catch (error) {
+        }
+    }
     static multiply(a, b) {
         try {
             if (a.cols !== b.rows) {
@@ -48,12 +80,36 @@ class Matrix {
             throw new Error(error);
         }
     }
+    static transpose(matrix) {
+        try {
+            let mat = new Matrix(matrix.cols, matrix.rows);
+            for (let i = 0; i < matrix.rows; i++) {
+                for (let j = 0; j < matrix.cols; j++) {
+                    mat.data[j][i] = matrix.data[i][j];
+                }
+            }
+            return mat;
+        }
+        catch (error) {
+            throw new Error(error);
+        }
+    }
     static fromArray(array) {
         let m = new Matrix(array.length, 1);
         for (let i = 0; i < m.rows; i++) {
             m.data[i][0] = array[i];
         }
         return m;
+    }
+    static map(matrix, fn) {
+        let result = new Matrix(matrix.rows, matrix.cols);
+        for (let i = 0; i < matrix.rows; i++) {
+            for (let j = 0; j < matrix.cols; j++) {
+                let val = matrix.data[i][j];
+                result.data[j][j] = fn(val);
+            }
+        }
+        return result;
     }
     toArray() {
         let array = [];
@@ -73,8 +129,18 @@ class Matrix {
                     }
                 }
             }
+            else if (a instanceof Matrix) {
+                if (a.rows !== this.rows && a.cols !== this.cols) {
+                    throw `for Element wise multiply dimansion of both matrices should be equal`;
+                }
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        this.data[i][j] *= a.data[i][j];
+                    }
+                }
+            }
             else {
-                throw `"${a}" must be a number`;
+                throw `"${a}" must be a number or Matrix`;
             }
         }
         catch (error) {
@@ -95,6 +161,20 @@ class Matrix {
         catch (error) {
         }
     }
+    subtract(mat) {
+        try {
+            if (this.rows !== mat.rows && this.cols !== mat.cols) {
+                throw 'For matrix subtraction rows and columns of both matries should be equal';
+            }
+            for (let i = 0; i < this.rows; i++) {
+                for (let j = 0; j < this.cols; j++) {
+                    this.data[i][j] -= mat.data[i][j];
+                }
+            }
+        }
+        catch (error) {
+        }
+    }
     inverse() {
         try {
             let mat = new Matrix(this.rows, this.cols);
@@ -104,20 +184,6 @@ class Matrix {
             return mat;
         }
         catch (_a) {
-        }
-    }
-    transpos() {
-        try {
-            let mat = new Matrix(this.cols, this.rows);
-            for (let i = 0; i < this.rows; i++) {
-                for (let j = 0; j < this.cols; j++) {
-                    mat.data[j][i] = this.data[i][j];
-                }
-            }
-            return mat;
-        }
-        catch (error) {
-            throw new Error(error);
         }
     }
     determinant() {
@@ -175,6 +241,7 @@ class Matrix {
 }
 class NeuralNetwork {
     constructor(input, hidden, output) {
+        this.learning_rate = 0.1;
         this.input_nodes = input;
         this.hidden_nodes = hidden;
         this.output_nodes = output;
@@ -197,12 +264,65 @@ class NeuralNetwork {
         output.map(sigmoid);
         return output.toArray();
     }
+    train(input_array, answer) {
+        let inputs = Matrix.fromArray(input_array);
+        let hidden = Matrix.multiply(this.weight_ih, inputs);
+        hidden.add(this.bias_h);
+        hidden.map(sigmoid);
+        let outputs = Matrix.multiply(this.weight_ho, hidden);
+        outputs.add(this.bias_o);
+        outputs.map(sigmoid);
+        let targets = Matrix.fromArray(answer);
+        let output_errors = Matrix.subtract(targets, outputs);
+        let gradient = Matrix.map(outputs, dSigmoid);
+        gradient.multiply(output_errors);
+        gradient.multiply(this.learning_rate);
+        this.bias_o.add(gradient);
+        let hidden_T = Matrix.transpose(hidden);
+        let weight_ho_deltas = Matrix.multiply(gradient, hidden_T);
+        this.weight_ho.add(weight_ho_deltas);
+        let weight_ho_t = Matrix.transpose(this.weight_ho);
+        let hidden_errors = Matrix.multiply(weight_ho_t, output_errors);
+        let hiddent_gradient = Matrix.map(hidden, dSigmoid);
+        hiddent_gradient.multiply(hidden_errors);
+        hiddent_gradient.multiply(this.learning_rate);
+        this.bias_h.add(hiddent_gradient);
+        let input_T = Matrix.transpose(inputs);
+        let weight_ih_deltas = Matrix.multiply(hiddent_gradient, input_T);
+        this.weight_ih.add(weight_ih_deltas);
+    }
 }
+let training_data = [
+    {
+        inputs: [0, 1],
+        targets: [1],
+    },
+    {
+        inputs: [1, 0],
+        targets: [1],
+    },
+    {
+        inputs: [1, 1],
+        targets: [0],
+    },
+    {
+        inputs: [0, 0],
+        targets: [0],
+    },
+];
 let nn = new NeuralNetwork(2, 2, 1);
-let input = [1, 0];
-let output = nn.feedForword(input);
-console.log(output);
-let a;
+let inputs = [1, 0];
+let targets = [1, 0];
+for (let i = 0; i < 1000000; i++) {
+    let data = training_data[randomInt(0, 3)];
+    nn.train(data.inputs, data.targets);
+}
+console.log(nn.feedForword([0, 1]));
+console.log(nn.feedForword([1, 0]));
+console.log(nn.feedForword([0, 0]));
+console.log(nn.feedForword([1, 1]));
+console.log(nn.weight_ih.print());
+console.log(nn.weight_ho.print());
 function randomInt(a, b) {
     if (a > b) {
         throw Error(`${a} should be less than ${b}`);
@@ -263,5 +383,8 @@ function TwoDArray(row, column) {
 }
 function sigmoid(x) {
     return 1 / (1 + Math.exp(-x));
+}
+function dSigmoid(y) {
+    return y * (1 - y);
 }
 //# sourceMappingURL=NN.js.map

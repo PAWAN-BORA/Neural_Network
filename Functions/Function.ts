@@ -69,3 +69,10 @@ function TwoDArray(row:number, column:number):Array<Array<any>> {
 function sigmoid(x:number):number {
   return 1/(1+Math.exp(-x));
 }
+
+/*------------------> Derivative Sigmoid Function <------------------*/ 
+
+function dSigmoid(y:number):number {
+  // return sigmoid(x)*(1-sigmoid(x));
+  return y*(1-y);
+}
