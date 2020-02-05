@@ -102,6 +102,9 @@ class Matrix {
             let temp;
             let sign = 1;
             for (let i = 0; i < this.rows; i++) {
+                if (this.data[0][i] === 0) {
+                    continue;
+                }
                 temp = this.getCoffactorMatrix(0, i, this.rows);
                 det += sign * this.data[0][i] * temp.determinant();
                 sign *= -1;
