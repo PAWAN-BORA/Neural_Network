@@ -106,7 +106,7 @@ class Matrix {
         for (let i = 0; i < matrix.rows; i++) {
             for (let j = 0; j < matrix.cols; j++) {
                 let val = matrix.data[i][j];
-                result.data[j][j] = fn(val);
+                result.data[i][j] = fn(val);
             }
         }
         return result;
@@ -149,12 +149,21 @@ class Matrix {
     }
     add(mat) {
         try {
-            if (this.rows !== mat.rows && this.cols !== mat.cols) {
-                throw 'For matrix addition rows and columns of both matries should be equal';
+            if (typeof mat === "number") {
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        this.data[i][j] += mat;
+                    }
+                }
             }
-            for (let i = 0; i < this.rows; i++) {
-                for (let j = 0; j < this.cols; j++) {
-                    this.data[i][j] += mat.data[i][j];
+            else {
+                if (this.rows !== mat.rows && this.cols !== mat.cols) {
+                    throw 'For matrix addition rows and columns of both matries should be equal';
+                }
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        this.data[i][j] += mat.data[i][j];
+                    }
                 }
             }
         }
@@ -184,6 +193,21 @@ class Matrix {
             return mat;
         }
         catch (_a) {
+        }
+    }
+    putData(data) {
+        try {
+            if (data.length !== this.rows && data[0].length !== this.cols) {
+                throw 'dimension of data and matrix are mismatched';
+            }
+            for (let i = 0; i < this.rows; i++) {
+                for (let j = 0; j < this.cols; j++) {
+                    this.data[i][j] = data[i][j];
+                }
+            }
+        }
+        catch (error) {
+            throw new Error(error);
         }
     }
     determinant() {
@@ -231,7 +255,7 @@ class Matrix {
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.cols; j++) {
                 let val = this.data[i][j];
-                this.data[j][j] = fn(val);
+                this.data[i][j] = fn(val);
             }
         }
     }
@@ -254,9 +278,20 @@ class NeuralNetwork {
         this.bias_h.randomise();
         this.bias_o.randomise();
     }
-    feedForword(input_array) {
-        let input = Matrix.fromArray(input_array);
-        let hidden = Matrix.multiply(this.weight_ih, input);
+    setLearningRete(val) {
+        this.learning_rate = val;
+    }
+    setWeights(weight_ih, weight_ho) {
+        this.weight_ih = weight_ih;
+        this.weight_ho = weight_ho;
+    }
+    setBiases(bias_h, bias_o) {
+        this.bias_h = bias_h;
+        this.bias_o = bias_o;
+    }
+    predict(input_array) {
+        let inputs = Matrix.fromArray(input_array);
+        let hidden = Matrix.multiply(this.weight_ih, inputs);
         hidden.add(this.bias_h);
         hidden.map(sigmoid);
         let output = Matrix.multiply(this.weight_ho, hidden);
@@ -264,7 +299,7 @@ class NeuralNetwork {
         output.map(sigmoid);
         return output.toArray();
     }
-    train(input_array, answer) {
+    train(input_array, target_array) {
         let inputs = Matrix.fromArray(input_array);
         let hidden = Matrix.multiply(this.weight_ih, inputs);
         hidden.add(this.bias_h);
@@ -272,26 +307,71 @@ class NeuralNetwork {
         let outputs = Matrix.multiply(this.weight_ho, hidden);
         outputs.add(this.bias_o);
         outputs.map(sigmoid);
-        let targets = Matrix.fromArray(answer);
+        let targets = Matrix.fromArray(target_array);
         let output_errors = Matrix.subtract(targets, outputs);
         let gradient = Matrix.map(outputs, dSigmoid);
         gradient.multiply(output_errors);
         gradient.multiply(this.learning_rate);
-        this.bias_o.add(gradient);
         let hidden_T = Matrix.transpose(hidden);
         let weight_ho_deltas = Matrix.multiply(gradient, hidden_T);
         this.weight_ho.add(weight_ho_deltas);
+        this.bias_o.add(gradient);
         let weight_ho_t = Matrix.transpose(this.weight_ho);
         let hidden_errors = Matrix.multiply(weight_ho_t, output_errors);
         let hiddent_gradient = Matrix.map(hidden, dSigmoid);
         hiddent_gradient.multiply(hidden_errors);
         hiddent_gradient.multiply(this.learning_rate);
-        this.bias_h.add(hiddent_gradient);
         let input_T = Matrix.transpose(inputs);
         let weight_ih_deltas = Matrix.multiply(hiddent_gradient, input_T);
         this.weight_ih.add(weight_ih_deltas);
+        this.bias_h.add(hiddent_gradient);
     }
 }
+let weight1Data = [
+    [
+        -19.804729348708893,
+        16.728854516486166
+    ],
+    [
+        -14.528434162579579,
+        17.612581950463962
+    ],
+    [
+        15.45588902349543,
+        -18.529303226201325
+    ],
+    [
+        -13.487953326239591,
+        -13.837188295278144
+    ]
+];
+let weight2Data = [
+    [
+        14.9463291508372,
+        -6.172972585929893,
+        9.123670856182239,
+        -2.7643453323754352
+    ]
+];
+let bias1Data = [
+    [
+        -7.263731574564285
+    ],
+    [
+        6.334549805778172
+    ],
+    [
+        -6.801741821783551
+    ],
+    [
+        5.198344325720556
+    ]
+];
+let bias2Data = [
+    [
+        -1.1996230790421196
+    ]
+];
 let training_data = [
     {
         inputs: [0, 1],
@@ -310,19 +390,31 @@ let training_data = [
         targets: [0],
     },
 ];
-let nn = new NeuralNetwork(2, 2, 1);
+let nn = new NeuralNetwork(2, 4, 1);
 let inputs = [1, 0];
 let targets = [1, 0];
-for (let i = 0; i < 1000000; i++) {
+let weigMat = new Matrix(weight1Data.length, weight1Data[0].length);
+weigMat.putData(weight1Data);
+let weig2Mat = new Matrix(weight2Data.length, weight2Data[0].length);
+weig2Mat.putData(weight2Data);
+let bias1Mat = new Matrix(bias1Data.length, bias1Data[0].length);
+bias1Mat.putData(bias1Data);
+let bias2Mat = new Matrix(bias2Data.length, bias2Data[0].length);
+bias2Mat.putData(bias2Data);
+nn.setWeights(weigMat, weig2Mat);
+nn.setBiases(bias1Mat, bias2Mat);
+for (let i = 0; i < 1000000000; i++) {
     let data = training_data[randomInt(0, 3)];
     nn.train(data.inputs, data.targets);
 }
-console.log(nn.feedForword([0, 1]));
-console.log(nn.feedForword([1, 0]));
-console.log(nn.feedForword([0, 0]));
-console.log(nn.feedForword([1, 1]));
-console.log(nn.weight_ih.print());
-console.log(nn.weight_ho.print());
+console.log(nn.predict([0, 1]));
+console.log(nn.predict([1, 0]));
+console.log(nn.predict([1, 1]));
+console.log(nn.predict([0, 0]));
+console.log("weigh1", nn.weight_ih.data);
+console.log("weigh2", nn.weight_ho.data);
+console.log("bias1", nn.bias_h.data);
+console.log("bias2", nn.bias_o.data);
 function randomInt(a, b) {
     if (a > b) {
         throw Error(`${a} should be less than ${b}`);

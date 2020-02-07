@@ -106,7 +106,7 @@ class Matrix {
         for(let i=0; i<matrix.rows; i++) {
             for(let j=0; j<matrix.cols; j++){
                 let val = matrix.data[i][j];
-                result.data[j][j] = fn(val);
+                result.data[i][j] = fn(val);
             }
         }
         return result;
@@ -144,16 +144,25 @@ class Matrix {
             throw new Error(error);
         }
     }
-    public add(mat:Matrix):void {
+    public add(mat:number|Matrix):void {
         try {
-            if(this.rows!==mat.rows && this.cols!==mat.cols) {
-                throw 'For matrix addition rows and columns of both matries should be equal'
-            }
-            for(let i=0; i<this.rows; i++) {
-                for(let j=0; j<this.cols; j++) {
-                    this.data[i][j] += mat.data[i][j];
+            if(typeof mat ==="number") {
+                for(let i=0; i<this.rows; i++) {
+                    for(let j=0; j<this.cols; j++) {
+                        this.data[i][j] += mat;
+                    }
+                }
+            } else {
+                if(this.rows!==mat.rows && this.cols!==mat.cols) {
+                    throw 'For matrix addition rows and columns of both matries should be equal'
+                }
+                for(let i=0; i<this.rows; i++) {
+                    for(let j=0; j<this.cols; j++) {
+                        this.data[i][j] += mat.data[i][j];
+                    }
                 }
             }
+            
         } catch (error) {
             
         }
@@ -186,7 +195,21 @@ class Matrix {
         }
 
     }
-    
+    public putData(data:number[][]):void {
+        try {
+            if(data.length!==this.rows && data[0].length!==this.cols) {
+                throw 'dimension of data and matrix are mismatched';
+            }
+            for(let i=0; i<this.rows; i++) {
+                for(let j=0; j<this.cols; j++) {
+                    this.data[i][j] = data[i][j];
+                }
+            }
+            
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
     public determinant():number {
         
         try {
@@ -236,7 +259,7 @@ class Matrix {
         for(let i=0; i<this.rows; i++) {
             for(let j=0; j<this.cols; j++){
                 let val = this.data[i][j];
-                this.data[j][j] = fn(val);
+                this.data[i][j] = fn(val);
             }
         }
     }
